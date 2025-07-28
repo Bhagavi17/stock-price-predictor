@@ -1,0 +1,20 @@
+# Core Framework
+streamlit
+
+# Data Handling
+pandas
+numpy
+
+# Machine Learning
+scikit-learn
+
+# Stock Data
+yfinance
+
+# Plotting
+matplotlib
+seaborn
+plotly
+
+# Utility (optional but good for robustness)
+python-dateutil
