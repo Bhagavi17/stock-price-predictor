@@ -1,23 +1,35 @@
+import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-import streamlit as st
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error, r2_score
 from sklearn.model_selection import train_test_split
 import yfinance as yf
-import numpy as np
 
-# App Title
-st.title("📈 Stock Price Predictor - AAPL")
+st.set_page_config(page_title="Stock Price Predictor", layout="centered")
+st.title("📈 Stock Price Predictor")
+st.info("🔁 If you get a rate limit error, please wait 1-2 minutes and click 'Rerun' (top-right).")
 
-# Download data
-st.write("⏳ Downloading AAPL stock data...")
-df = yf.download('AAPL', start='2019-01-01', end='2024-12-31')
+# Download and cache data
+@st.cache_data
+def load_stock_data():
+    return yf.download('AAPL', start='2019-01-01', end='2024-12-31')
+
+# Try downloading
+try:
+    df = load_stock_data()
+    if df.empty:
+        st.error("❌ No data received. Rate limit hit. Please try again later.")
+        st.stop()
+except Exception as e:
+    st.error(f"❌ Download failed: {e}")
+    st.stop()
+
+# Prepare data
 df = df[['Close']].dropna()
 df['Prev_Close'] = df['Close'].shift(1)
 df.dropna(inplace=True)
 
-# Features and target
 X = df[['Prev_Close']]
 y = df['Close']
 
@@ -29,20 +41,16 @@ model = RandomForestRegressor()
 model.fit(X_train, y_train)
 y_pred = model.predict(X_test)
 
-# Evaluation
-rmse = np.sqrt(mean_squared_error(y_test, y_pred))
+# Metrics
+rmse = mean_squared_error(y_test, y_pred, squared=False)
 r2 = r2_score(y_test, y_pred)
 
-st.subheader("📊 Model Evaluation")
-st.write("**RMSE:**", round(rmse, 2))
-st.write("**R² Score:**", round(r2, 2))
+st.success(f"✅ Model trained! RMSE: {rmse:.2f}, R² Score: {r2:.2f}")
 
-# Plot
-st.subheader("📉 Actual vs Predicted Closing Prices")
+# Plot results
 fig, ax = plt.subplots(figsize=(10, 5))
-ax.plot(y_test.index, y_test, label='Actual')
-ax.plot(y_test.index, y_pred, label='Predicted')
-ax.legend()
+ax.plot(y_test.index, y_test, label='Actual', color='blue')
+ax.plot(y_test.index, y_pred, label='Predicted', color='orange')
 ax.set_title("AAPL: Actual vs Predicted Closing Prices")
+ax.legend()
 st.pyplot(fig)
-
