@@ -1,0 +1,12 @@
+import yfinance as yf
+import pandas as pd
+
+# Download data
+df = yf.download('AAPL', start='2019-01-01', end='2024-12-31')
+df = df[['Close']].dropna()
+df['Prev_Close'] = df['Close'].shift(1)
+df = df.dropna()
+
+# Save as CSV
+df.to_csv("AAPL_stock_data.csv", index=True)
+print("✅ AAPL_stock_data.csv generated successfully.")
